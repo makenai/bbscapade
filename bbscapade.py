@@ -276,16 +276,99 @@ class BBScapade:
         while self.logged_in:
             os.system('cls' if os.name == 'nt' else 'clear')
             
-            print(f"{Fore.CYAN}{Style.BRIGHT}==== MAIN MENU ===={Style.RESET_ALL}")
-            print(f"{Fore.WHITE}1. {Fore.GREEN}Message Boards")
-            print(f"{Fore.WHITE}2. {Fore.GREEN}File Archives")
-            print(f"{Fore.WHITE}3. {Fore.GREEN}Door Games")
-            print(f"{Fore.WHITE}4. {Fore.GREEN}Chat with SysOp (AI)")
-            print(f"{Fore.WHITE}5. {Fore.GREEN}User Settings")
-            print(f"{Fore.WHITE}6. {Fore.GREEN}About BBScapade")
-            print(f"{Fore.WHITE}7. {Fore.GREEN}Logoff")
+            # Choose a random menu style for this session
+            menu_style = random.choice(["standard", "boxed", "arrow", "retro", "ascii"])
             
-            choice = input(f"\n{Fore.YELLOW}Choose an option: {Fore.WHITE}")
+            # Random colors
+            colors = [Fore.CYAN, Fore.GREEN, Fore.YELLOW, Fore.MAGENTA, Fore.RED, Fore.BLUE]
+            title_color = random.choice(colors)
+            option_color = random.choice([c for c in colors if c != title_color])
+            number_color = random.choice([c for c in colors if c not in [title_color, option_color]])
+            highlight_color = random.choice([c for c in colors if c not in [title_color, option_color, number_color]])
+            
+            # Display menu based on random style
+            if menu_style == "standard":
+                print(f"{title_color}{Style.BRIGHT}==== MAIN MENU ===={Style.RESET_ALL}")
+                print(f"{number_color}1. {option_color}Message Boards")
+                print(f"{number_color}2. {option_color}File Archives")
+                print(f"{number_color}3. {option_color}Door Games")
+                print(f"{number_color}4. {option_color}Chat with SysOp (AI)")
+                print(f"{number_color}5. {option_color}Logoff")
+            
+            elif menu_style == "boxed":
+                print(f"{title_color}╔══════════════════╗")
+                print(f"{title_color}║ {Style.BRIGHT}  MAIN MENU     {Style.RESET_ALL}{title_color}║")
+                print(f"{title_color}╠══════════════════╣")
+                print(f"{title_color}║ {number_color}1. {option_color}Message Boards {title_color}║")
+                print(f"{title_color}║ {number_color}2. {option_color}File Archives  {title_color}║")
+                print(f"{title_color}║ {number_color}3. {option_color}Door Games     {title_color}║")
+                print(f"{title_color}║ {number_color}4. {option_color}Chat with SysOp{title_color}║")
+                print(f"{title_color}║ {number_color}5. {option_color}Logoff         {title_color}║")
+                print(f"{title_color}╚══════════════════╝")
+            
+            elif menu_style == "arrow":
+                print(f"{title_color}{Style.BRIGHT}>>> MAIN MENU <<<{Style.RESET_ALL}")
+                print(f"{highlight_color}------------------")
+                print(f"{number_color}1 {highlight_color}-> {option_color}Message Boards")
+                print(f"{number_color}2 {highlight_color}-> {option_color}File Archives")
+                print(f"{number_color}3 {highlight_color}-> {option_color}Door Games")
+                print(f"{number_color}4 {highlight_color}-> {option_color}Chat with SysOp")
+                print(f"{number_color}5 {highlight_color}-> {option_color}Logoff")
+                print(f"{highlight_color}------------------")
+            
+            elif menu_style == "retro":
+                print(f"{title_color}■■■■■■■■■■■■■■■■■■■■■■■■")
+                print(f"{title_color}■ {Style.BRIGHT}BBS COMMAND CENTER{Style.RESET_ALL} {title_color}■")
+                print(f"{title_color}■■■■■■■■■■■■■■■■■■■■■■■■")
+                print(f"{option_color}  [{number_color}1{option_color}] Message Boards")
+                print(f"{option_color}  [{number_color}2{option_color}] File Archives")
+                print(f"{option_color}  [{number_color}3{option_color}] Door Games")
+                print(f"{option_color}  [{number_color}4{option_color}] Chat with SysOp")
+                print(f"{option_color}  [{number_color}5{option_color}] Logoff System")
+                print(f"{title_color}■■■■■■■■■■■■■■■■■■■■■■■■")
+            
+            else:  # ascii
+                menu_art = random.choice([
+                    r"""
+  /\/\   ___ _ __  _   _ 
+ /    \ / _ \ '_ \| | | |
+/ /\/\ \  __/ | | | |_| |
+\/    \/\___|_| |_|\__,_|
+                    """,
+                    r"""
+ __  __                  
+|  \/  | ___ _ __  _   _ 
+| |\/| |/ _ \ '_ \| | | |
+| |  | |  __/ | | | |_| |
+|_|  |_|\___|_| |_|\__,_|
+                    """,
+                    r"""
+   ___      _   _                 
+  / __\__ _| | | | ___  _ __ ___  
+ / /  / _` | |_| |/ _ \| '_ ` _ \ 
+/ /__| (_| |  _  | (_) | | | | | |
+\____/\__,_|_| |_|\___/|_| |_| |_|
+                    """
+                ])
+                print(f"{title_color}{menu_art}")
+                print(f"{highlight_color}{'=' * 30}")
+                print(f"{number_color}1. {option_color}Message Boards")
+                print(f"{number_color}2. {option_color}File Archives")
+                print(f"{number_color}3. {option_color}Door Games")
+                print(f"{number_color}4. {option_color}Chat with SysOp")
+                print(f"{number_color}5. {option_color}Logoff")
+                print(f"{highlight_color}{'=' * 30}")
+            
+            # Get user choice with a randomized prompt
+            prompts = [
+                f"\n{highlight_color}Choose an option: {Fore.WHITE}",
+                f"\n{highlight_color}Enter selection: {Fore.WHITE}",
+                f"\n{highlight_color}Command: {Fore.WHITE}",
+                f"\n{highlight_color}Your choice? {Fore.WHITE}",
+                f"\n{highlight_color}What's your pleasure? {Fore.WHITE}"
+            ]
+            
+            choice = input(random.choice(prompts))
             
             if choice == "1":
                 self.message_boards()
@@ -296,10 +379,6 @@ class BBScapade:
             elif choice == "4":
                 self.chat_with_sysop()
             elif choice == "5":
-                self.user_settings()
-            elif choice == "6":
-                self.about()
-            elif choice == "7":
                 self.logoff()
                 break
             else:
@@ -1268,25 +1347,6 @@ class BBScapade:
         
         # Display the message
         print(f"{color}[{sysop_name}]: {Fore.WHITE}{message}")
-
-    def user_settings(self):
-        """User settings functionality - placeholder"""
-        os.system('cls' if os.name == 'nt' else 'clear')
-        print(f"{Fore.CYAN}{Style.BRIGHT}==== USER SETTINGS ===={Style.RESET_ALL}")
-        print(f"{Fore.YELLOW}(This feature is not implemented in the skeleton.)")
-        input(f"{Fore.GREEN}Press Enter to return to main menu...")
-
-    def about(self):
-        """About screen"""
-        os.system('cls' if os.name == 'nt' else 'clear')
-        print(f"{Fore.CYAN}{Style.BRIGHT}==== ABOUT BBSCAPADE ===={Style.RESET_ALL}")
-        print(f"{Fore.GREEN}BBScapade - A nostalgic BBS experience powered by Claude AI")
-        print(f"{Fore.GREEN}Each time you connect, a new, randomly generated BBS is created")
-        print(f"{Fore.GREEN}with unique content, message boards, and SysOp personality.")
-        print()
-        print(f"{Fore.YELLOW}This is a fun project that simulates the BBS experience of")
-        print(f"{Fore.YELLOW}the late 80s and early 90s with a modern AI twist.")
-        input(f"\n{Fore.GREEN}Press Enter to return to main menu...")
 
     def logoff(self):
         """Log off from the BBS"""
