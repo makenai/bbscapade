@@ -1,0 +1,7 @@
+anthropic       # For Claude API integration
+colorama        # For ANSI color text in terminal
+pyfiglet        # For ASCII art text
+python-dotenv   # For environment variable management
+simpleaudio     # For playing the dialup sound
+requests        # For API calls
+pynput          # For keyboard input handling
