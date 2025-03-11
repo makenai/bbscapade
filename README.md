@@ -17,7 +17,7 @@ BBScapade is a nostalgic, AI-powered BBS (Bulletin Board System) simulator that 
 
 1. Clone this repository:
    ```
-   git clone https://github.com/yourusername/bbscapade.git
+   git clone https://github.com/makenai/bbscapade.git
    cd bbscapade
    ```
 
@@ -61,6 +61,7 @@ python bbscapade.py
 - Python 3.8+
 - Claude API key
 - External dependencies listed in requirements.txt
+- Currently using `afplay` from OSX to play sound file as there were issues with simpleaudio crashing
 
 ## Future Enhancements
 
