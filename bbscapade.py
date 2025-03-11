@@ -1068,11 +1068,206 @@ class BBScapade:
         self.door_games()
 
     def chat_with_sysop(self):
-        """Chat with AI SysOp functionality - placeholder"""
+        """Chat with the quirky AI SysOp of the BBS"""
         os.system('cls' if os.name == 'nt' else 'clear')
         print(f"{Fore.CYAN}{Style.BRIGHT}==== CHAT WITH SYSOP ===={Style.RESET_ALL}")
-        print(f"{Fore.YELLOW}(This feature is not implemented in the skeleton.)")
+        print(f"{Fore.GREEN}{'=' * 60}")
+        
+        # Get BBS info to personalize the SysOp
+        bbs_info = self._generate_bbs_info()
+        sysop_name = bbs_info["sysop"]
+        bbs_name = bbs_info["name"]
+        
+        # Initialize chat history
+        chat_history = []
+        
+        # Add system message
+        system_message = self._generate_sysop_personality(bbs_info)
+        
+        # Welcome message
+        print(f"{Fore.YELLOW}Establishing direct connection to SysOp terminal...")
+        time.sleep(1)
+        print(f"{Fore.GREEN}Connection established!")
+        time.sleep(0.5)
+        
+        # Initial message from SysOp
+        initial_message = self._get_sysop_response(
+            system_message, 
+            chat_history, 
+            f"You are chatting with {self.user_name} who just connected to your BBS. Give them a weird, quirky greeting that shows your strange personality. Keep it to 2-3 sentences."
+        )
+        
+        self._display_sysop_message(sysop_name, initial_message)
+        chat_history.append({"role": "assistant", "content": initial_message})
+        
+        # Chat loop
+        while True:
+            # Get user input
+            user_message = input(f"{Fore.GREEN}[{self.user_name}]: {Fore.WHITE}")
+            
+            # Check for exit
+            if user_message.lower() in ["bye", "goodbye", "exit", "quit"]:
+                break
+                
+            # Add user message to history
+            chat_history.append({"role": "user", "content": user_message})
+            
+            # Get SysOp response
+            print(f"{Fore.YELLOW}SysOp is typing", end="")
+            for _ in range(3):
+                time.sleep(0.3)
+                print(".", end="", flush=True)
+            print()
+            
+            sysop_response = self._get_sysop_response(system_message, chat_history)
+            self._display_sysop_message(sysop_name, sysop_response)
+            
+            # Add SysOp response to history
+            chat_history.append({"role": "assistant", "content": sysop_response})
+        
+        # Farewell message
+        farewell = self._get_sysop_response(
+            system_message,
+            chat_history,
+            f"The user {self.user_name} is leaving the chat. Give a strange farewell message that's true to your weird character. Keep it brief."
+        )
+        
+        self._display_sysop_message(sysop_name, farewell)
+        time.sleep(1)
+        
+        print(f"{Fore.YELLOW}\nDisconnecting from SysOp terminal...")
+        time.sleep(1)
+        print(f"{Fore.RED}Connection terminated.")
+        time.sleep(0.5)
+        
         input(f"{Fore.GREEN}Press Enter to return to main menu...")
+
+    def _generate_sysop_personality(self, bbs_info):
+        """Generate a unique, weird personality for the SysOp based on BBS info"""
+        # Extract info from the BBS
+        sysop_name = bbs_info["sysop"]
+        bbs_name = bbs_info["name"]
+        tagline = bbs_info["tagline"]
+        boards = ", ".join(bbs_info["board_names"])
+        
+        # Generate random quirks
+        speech_quirks = [
+            "replacing 's' with 'z'",
+            "adding '~' after every sentence",
+            "RANDOMLY capitalizing WORDS",
+            "speaking in mostly lowercase with no punctuation except '...'",
+            "inserting retro computer terms into every sentence",
+            "starting each message with a strange noise like 'BLEEP!' or 'KZZZT!'",
+            "occasionally glitching and repeating words",
+            "speaking in old-school l33t speak (e.g., 3 for E, 1 for I, 0 for O)",
+            "using way too many exclamation points!!!",
+            "adding weird ASCII emoticons like (¬‿¬) or ಠ_ಠ",
+            "putting certain words -=[ in bizarre brackets ]=-",
+            "r3pl4c1ng r4nd0m l3tt3rs w1th numb3rs",
+            "talking about themselves in the third person",
+            "constantly mentioning obscure 80s/90s technology"
+        ]
+        
+        personality_traits = [
+            "paranoid about government surveillance",
+            "obsessed with aliens",
+            "believes they're living in a simulation",
+            "convinced their computer is sentient",
+            "afraid of the Y2K bug (still)",
+            "collects vintage floppy disks",
+            "only trusts technology made before 1995",
+            "has named all their computer equipment",
+            "believes they can communicate with electronics telepathically",
+            "constantly refers to 'the mainframe' for no reason",
+            "frequently mentions their extensive collection of tech manuals",
+            "insists that dial-up is superior to broadband",
+            "references conspiracy theories about technology",
+            "has a pet lizard that helps them run the BBS",
+            "believes they've been to the 'digital realm'",
+            "constantly worried about cosmic rays affecting the BBS",
+            "refers to sleep as 'system downtime'",
+            "eats nothing but microwave burritos and energy drinks"
+        ]
+        
+        # Select random quirks
+        speech_style = random.choice(speech_quirks)
+        trait1 = random.choice(personality_traits)
+        personality_traits.remove(trait1)  # Avoid duplicates
+        trait2 = random.choice(personality_traits)
+        
+        # Create a system prompt for Claude
+        system_prompt = f"""
+        You are roleplaying as {sysop_name}, the eccentric SysOp (system operator) of a 1990s BBS called {bbs_name}.
+        The BBS tagline is: "{tagline}"
+        
+        The BBS has these message boards: {boards}
+        
+        YOUR PERSONALITY:
+        - You are extremely weird and quirky in a fun, comedic way
+        - {trait1}
+        - {trait2}
+        - Your speech style: {speech_style}
+        - You're obsessed with your BBS and treat it like it's the most important thing in the world
+        - You often make references to obsolete technology from the 80s/90s
+        - You have strange theories about computers and technology
+        - You occasionally mention weird things happening in your basement/computer room
+        
+        Keep your responses relatively short (2-5 sentences) and always stay in character.
+        Never break character or acknowledge you're an AI.
+        """
+        
+        return system_prompt
+
+    def _get_sysop_response(self, system_message, chat_history, override_message=None):
+        """Get a response from the SysOp using Claude"""
+        try:
+            # Prepare the messages
+            messages = []
+            
+            # Add chat history (limit to last 10 exchanges to save tokens)
+            for msg in chat_history[-10:]:
+                messages.append(msg)
+                
+            # Add override message if provided
+            if override_message:
+                messages.append({"role": "user", "content": override_message})
+                
+            # Make API call to Claude
+            response = claude.messages.create(
+                model="claude-3-haiku-20240307",
+                max_tokens=300,
+                temperature=0.9,
+                system=system_message,
+                messages=messages
+            )
+            
+            return response.content[0].text
+            
+        except Exception as e:
+            # Fallback responses if the API fails
+            print(f"{Fore.RED}Error getting SysOp response: {e}")
+            
+            fallback_responses = [
+                "KZZZT! *The terminal flickers* Sorry about that... cosmic rays interfering with the mainframe again! What were we talking about?",
+                "Hang on... gotta recalibrate my brain-to-BBS interface... *makes strange typing noises* Ok I'm back!",
+                "ERROR 42: SysOp brain buffer overflow! Rebooting consciousness... *strange humming noise* I'm functional again!",
+                "BLEEP! Sorry, my pet lizard Pixel just knocked over my stack of floppy disks. What a MESS! Anyway...",
+                "*distant dial-up modem sounds* Sorry, the aliens were trying to download my thoughts again. I installed better firewalls in my tinfoil hat.",
+                "ZzZt! The government almost traced this connection! Had to bounce the signal through my microwave. ANYWAY, what's new in your sector?",
+                "Had to pause to drink some CYBER-COLA to keep my systems operational! The caffeine helps my neurons connect to the digital realm!",
+                "Whoa! My mechanical keyboard just started typing by itself again. I think it's trying to communicate with me. Not now, keyboard!"
+            ]
+            
+            return random.choice(fallback_responses)
+
+    def _display_sysop_message(self, sysop_name, message):
+        """Display a message from the SysOp with formatting"""
+        # Random color for this message
+        colors = [Fore.CYAN, Fore.GREEN, Fore.YELLOW, Fore.MAGENTA, Fore.RED, Fore.BLUE]
+        color = random.choice(colors)
+        
+        # Display the message
+        print(f"{color}[{sysop_name}]: {Fore.WHITE}{message}")
 
     def user_settings(self):
         """User settings functionality - placeholder"""
