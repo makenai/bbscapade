@@ -314,11 +314,232 @@ class BBScapade:
         print(end=end)
 
     def message_boards(self):
-        """Message board functionality - placeholder"""
+        """Display and navigate message boards"""
         os.system('cls' if os.name == 'nt' else 'clear')
         print(f"{Fore.CYAN}{Style.BRIGHT}==== MESSAGE BOARDS ===={Style.RESET_ALL}")
-        print(f"{Fore.YELLOW}(This feature is not implemented in the skeleton.)")
-        input(f"{Fore.GREEN}Press Enter to return to main menu...")
+        
+        # Get BBS info to access board names
+        bbs_info = self._generate_bbs_info()
+        board_names = bbs_info["board_names"]
+        
+        # Display available boards
+        print(f"{Fore.GREEN}Available message boards:\n")
+        for i, board in enumerate(board_names, 1):
+            print(f"{Fore.WHITE}{i}. {Fore.YELLOW}{board}")
+        print(f"{Fore.WHITE}{len(board_names) + 1}. {Fore.YELLOW}Return to Main Menu")
+        
+        # Get user choice
+        try:
+            choice = int(input(f"\n{Fore.GREEN}Select a board: {Fore.WHITE}"))
+            if 1 <= choice <= len(board_names):
+                self.view_board(board_names[choice - 1])
+            elif choice == len(board_names) + 1:
+                return
+            else:
+                print(f"{Fore.RED}Invalid choice.")
+                time.sleep(1)
+                self.message_boards()
+        except ValueError:
+            print(f"{Fore.RED}Please enter a number.")
+            time.sleep(1)
+            self.message_boards()
+
+    def view_board(self, board_name):
+        """View messages in a specific board"""
+        # Generate messages for this board if we don't have any
+        if not hasattr(self, 'board_messages') or board_name not in self.board_messages:
+            self._generate_board_messages(board_name)
+        
+        messages = self.board_messages[board_name]
+        current_msg_idx = 0
+        
+        while current_msg_idx < len(messages):
+            os.system('cls' if os.name == 'nt' else 'clear')
+            message = messages[current_msg_idx]
+            
+            # Display message header
+            print(f"{Fore.CYAN}{Style.BRIGHT}==== {board_name} ===={Style.RESET_ALL}")
+            print(f"{Fore.GREEN}{'=' * 60}")
+            print(f"{Fore.WHITE}Message: {Fore.YELLOW}#{current_msg_idx + 1} of {len(messages)}")
+            print(f"{Fore.WHITE}From: {Fore.MAGENTA}{message['author']}")
+            print(f"{Fore.WHITE}Date: {Fore.MAGENTA}{message['date']}")
+            print(f"{Fore.WHITE}Subject: {Fore.YELLOW}{message['subject']}")
+            print(f"{Fore.GREEN}{'=' * 60}")
+            
+            # Display message content with word wrap
+            content_lines = self._wrap_text(message['content'], 60)
+            for line in content_lines:
+                print(f"{Fore.WHITE}{line}")
+            
+            print(f"{Fore.GREEN}{'=' * 60}")
+            print(f"{Fore.WHITE}N{Fore.GREEN}ext message, {Fore.WHITE}Q{Fore.GREEN}uit to board list")
+            
+            # Get user choice
+            choice = input(f"\n{Fore.YELLOW}Command: {Fore.WHITE}").upper()
+            
+            if choice == 'N':
+                current_msg_idx += 1
+                if current_msg_idx >= len(messages):
+                    print(f"{Fore.YELLOW}End of messages.")
+                    time.sleep(1.5)
+                    break
+            elif choice == 'Q':
+                break
+            else:
+                print(f"{Fore.RED}Invalid command.")
+                time.sleep(1)
+        
+        # Return to board list
+        self.message_boards()
+
+    def _generate_board_messages(self, board_name):
+        """Generate random messages for a board using Claude"""
+        if not hasattr(self, 'board_messages'):
+            self.board_messages = {}
+        
+        # Initialize empty list for this board
+        self.board_messages[board_name] = []
+        
+        # Number of messages to generate (3-7)
+        num_messages = random.randint(3, 7)
+        
+        print(f"{Fore.YELLOW}Loading messages from {board_name}...")
+        
+        # Generate author names for this board
+        authors = self._generate_random_authors(num_messages)
+        
+        # Generate dates (random dates in the past, format: MM-DD-YY)
+        years = list(range(85, 96))  # 1985-1995
+        months = list(range(1, 13))
+        days = list(range(1, 29))  # Simplified - not checking month length
+        
+        dates = []
+        for _ in range(num_messages):
+            date = f"{random.choice(months):02d}-{random.choice(days):02d}-{random.choice(years):02d}"
+            dates.append(date)
+        
+        # Sort dates to make them chronological (oldest first)
+        dates.sort()
+        
+        # Generate message content using Claude
+        try:
+            # Make the API call to Claude to generate all messages at once
+            message = claude.messages.create(
+                model="claude-3-haiku-20240307",
+                max_tokens=800,
+                temperature=1.0,
+                system="You are a creative writer generating content for a nostalgic BBS simulation set in the late 1980s/early 1990s. Create weird, zany, and funny messages that might appear on a message board. The style should be reminiscent of old adventure games like Maniac Mansion, Space Quest, or Zork - full of strange scenarios, paranormal phenomena, and quirky humor. Keep each message between 3-6 sentences.",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"Generate {num_messages} bizarre, funny messages for a BBS board called '{board_name}'. Each message should include a subject line and content. The messages should be weird, zany, and in the style of old 80s adventure games like Maniac Mansion. Return the results as JSON with this format: [{{\"subject\": \"...\", \"content\": \"...\"}}, ...]. Make the content appropriately weird for this specific board topic."
+                    }
+                ]
+            )
+            
+            # Extract content and parse JSON
+            content = message.content[0].text
+            import json
+            import re
+            
+            # Try to find and parse JSON from the response
+            json_match = re.search(r'\[.*\]', content, re.DOTALL)
+            
+            if json_match:
+                json_str = json_match.group(0)
+                try:
+                    # Parse the JSON string
+                    message_data = json.loads(json_str)
+                    
+                    # Create message objects
+                    for i in range(min(len(message_data), num_messages)):
+                        msg = {
+                            'author': authors[i],
+                            'date': dates[i],
+                            'subject': message_data[i]['subject'],
+                            'content': message_data[i]['content']
+                        }
+                        self.board_messages[board_name].append(msg)
+                    
+                except (json.JSONDecodeError, ValueError) as e:
+                    print(f"{Fore.RED}Error parsing message data: {e}")
+                    self._generate_fallback_messages(board_name, num_messages, authors, dates)
+            else:
+                self._generate_fallback_messages(board_name, num_messages, authors, dates)
+                
+        except Exception as e:
+            print(f"{Fore.RED}Error generating messages: {e}")
+            self._generate_fallback_messages(board_name, num_messages, authors, dates)
+        
+        # If no messages were generated, use fallback
+        if len(self.board_messages[board_name]) == 0:
+            self._generate_fallback_messages(board_name, num_messages, authors, dates)
+            
+        time.sleep(1)  # Brief pause for "loading" effect
+
+    def _generate_fallback_messages(self, board_name, num_messages, authors, dates):
+        """Generate fallback messages if Claude API fails"""
+        fallback_messages = [
+            {
+                'subject': "Strange lights in the sky last night",
+                'content': "Did anyone else see those weird lights hovering over the old mill? They were pulsating green and purple, and I swear they followed me home. My toaster has been speaking in Latin ever since. Should I be concerned or just make more toast?"
+            },
+            {
+                'subject': "My computer is possessed",
+                'content': "Every time I try to download a file, my computer plays the theme from Knight Rider and the floppy drive ejects with incredible force. Yesterday it knocked over my Star Trek figurines and rearranged them in strange symbols. Has anyone experienced similar hardware issues?"
+            },
+            {
+                'subject': "Time travel paradox question",
+                'content': "So I accidentally stepped into a temporal vortex in my basement while looking for Christmas decorations. Now I've met my younger self and we're going bowling on Thursdays. Is this causing a paradox? Also, should I tell him about his future baldness or let him discover it naturally?"
+            },
+            {
+                'subject': "Need help with tentacle infestation",
+                'content': "After playing that new game I downloaded from the file section, purple tentacles started growing out of my keyboard. They seem to like Mountain Dew and have composed a sonnet. Any recommended cleaning solutions that won't offend their artistic sensibilities?"
+            },
+            {
+                'subject': "Secret government conspiracy",
+                'content': "I've intercepted secret communications that prove the mall food court is actually a front for alien intelligence gathering. The Orange Julius guy has three eyes under his hat, and the pretzels contain mind-control salt. Meet me behind the arcade if you want to know more."
+            },
+            {
+                'subject': "My dog learned BASIC programming",
+                'content': "I left my programming manual on the floor and now my Golden Retriever is writing code. His first program was just 'FETCH BALL' in an infinite loop, but he's getting better. Anyone know if there's a market for canine software developers? He works for treats."
+            },
+            {
+                'subject': "Haunted floppy disk",
+                'content': "I found an unmarked 5.25\" floppy at a garage sale. When I run it, it shows only a text adventure where all paths lead to a digital recreation of my own bedroom. Last night it printed 'BEHIND YOU' without being connected to a printer. Should I continue playing?"
+            }
+        ]
+        
+        for i in range(min(len(fallback_messages), num_messages)):
+            msg = {
+                'author': authors[i],
+                'date': dates[i],
+                'subject': fallback_messages[i]['subject'],
+                'content': fallback_messages[i]['content']
+            }
+            self.board_messages[board_name].append(msg)
+
+    def _generate_random_authors(self, count):
+        """Generate random BBS-style usernames for message authors"""
+        prefixes = ["Cyber", "Hack", "Pixel", "Digital", "Quantum", "Retro", "Rad", "Neon", "Disk", "Data", 
+                   "Modem", "Glitch", "Bit", "Byte", "Floppy", "Dial", "Logic", "Turbo", "Laser", "Vector"]
+        
+        suffixes = ["Master", "Wizard", "Kid", "Punk", "Surfer", "Slayer", "Runner", "Jockey", "Ninja", "Guru",
+                   "Lord", "Pirate", "Cowboy", "Phantom", "Ghost", "Warrior", "Wrangler", "Dude", "Hacker", "Phoenix"]
+        
+        numbers = ["", ""] + [str(random.randint(1, 99)) for _ in range(3)]  # 40% chance of having a number
+        
+        authors = []
+        for _ in range(count):
+            name = random.choice(prefixes) + random.choice(suffixes) + random.choice(numbers)
+            authors.append(name)
+        
+        return authors
+
+    def _wrap_text(self, text, width):
+        """Wrap text to a specified width"""
+        import textwrap
+        return textwrap.wrap(text, width)
 
     def file_archives(self):
         """File archives functionality - placeholder"""
@@ -378,7 +599,7 @@ class BBScapade:
             signal.signal(signal.SIGINT, self._handle_exit)
             
             # Play dialup sound
-            # self.play_dialup_sound()
+            self.play_dialup_sound()
             
             # Show welcome screen
             self.display_welcome_screen()
